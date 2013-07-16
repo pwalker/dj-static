@@ -12,6 +12,23 @@ except ImportError:     # Python 2
     from urlparse import urlparse
 from django.contrib.staticfiles import utils
 
+try:
+    from django.core.handlers.base import get_path_info
+except ImportError:     # django < 1.5
+    import six
+    
+    def get_path_info(environ):
+        """
+        Returns the HTTP request's PATH_INFO as a unicode string.
+        """
+        path_info = environ.get('PATH_INFO', str('/'))
+        # Under Python 3, strings in environ are decoded with ISO-8859-1;
+        # re-encode to recover the original bytestring provided by the web server.
+        if six.PY3:
+            path_info = path_info.encode('iso-8859-1')
+        # It'd be better to implement URI-to-IRI decoding, see #19508.
+        return path_info.decode('utf-8')
+
 
 try:
     from django.core.handlers.base import get_path_info
